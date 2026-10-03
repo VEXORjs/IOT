@@ -25,3 +25,11 @@ services:
       - "3000:3000"
     volumes:
       - "./grafana-data:/var/lib/grafana"
+
+  labsentinel_app:
+    build: "."
+    depends_on:
+      - mqtt
+    restart: unless-stopped
+    volumes:
+      - "./app-data:/app/data"
