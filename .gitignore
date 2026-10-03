@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+venv/
+.venv/
+*.pyc
+
+# Docker i lokalne wolumeny
+influxdb-data/
+grafana-data/
+
+# Edytory i system
+.vscode/
+.idea/
+.DS_Store
