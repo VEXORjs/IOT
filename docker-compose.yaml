@@ -7,6 +7,8 @@ services:
       - "1883:1883"
     volumes:
       - "./config/mosquitto.conf:/mosquitto/config/mosquitto.conf"
+      - "./config/passwd:/mosquitto/config/passwd"
+      - "./config/acl:/mosquitto/config/acl"
   
   influxdb:
     image: influxdb:latest
