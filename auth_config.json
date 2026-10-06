@@ -1,0 +1,8 @@
+{
+    "whitelist_rfid": {
+        "A1:B2:C3:D4:E5": "Zaufany Pracownik1"
+    },
+    "valid_pins": {
+        "A1:B2:C3:D4:E5": "4321"
+    }
+}
