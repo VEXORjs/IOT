@@ -125,7 +125,7 @@ class Endpoint:
 
     def save_offline_event(self, czas, id_urzadzenia, dane_czujnikow):
         """
-        Zapis odebranych dane z czujników bezpośrednio do lokalnej bazy danych SQLite w przypadku braku połączenia do siecu
+        Zapis odebranych danych z czujników bezpośrednio do lokalnej bazy danych SQLite/InfluxDB w przypadku braku połączenia do siecu
         :param czas:
         :param id_urzadzenia:
         :param dane_czujnikow:
