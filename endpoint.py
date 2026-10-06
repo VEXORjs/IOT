@@ -2,6 +2,9 @@ import threading
 import paho.mqtt.client as mqtt
 import json
 import sqlite3
+import time
+import hashlib
+
 
 class Endpoint:
     def __init__(self):
@@ -32,8 +35,6 @@ class Endpoint:
             self.whitelist = {}
             self.pins = {}
 
-
-
     def on_message(self, client, userdata, message):
         """
         Zarządzanie przyjmowanymi wiadomościami
@@ -47,7 +48,6 @@ class Endpoint:
         message_payload = message.payload.decode("utf-8")
         data = json.loads(message_payload)
 
-
         match topic:
             case "labs/lab_01/hardware/rfid":
                 self.handle_rfid(data.get("uid"))
@@ -58,8 +58,11 @@ class Endpoint:
             case "labs/lab_01/control":
                 if data.get("action") == "LOCKDOWN":
                     self.state["status"] = "LOCKDOWN"
-                    cmd_id = data.get("cmd_id")
-                    client.publish(f"labs/lab_01/response/{cmd_id}", json.dumps({"status": "success", "cmd_id": cmd_id}))
+
+                cmd_id = data.get("cmd_id")
+                if cmd_id:
+                    client.publish(f"labs/lab_01/response/{cmd_id}",
+                                   json.dumps({"status": "success", "cmd_id": cmd_id}))
 
     def handle_rfid(self, entered_uid):
         """
@@ -81,7 +84,6 @@ class Endpoint:
 
         self.auth_timer = threading.Timer(10.0, self.auth_timeout)
         self.auth_timer.start()
-
 
     def handle_pin(self, entered_pin):
         """
@@ -107,7 +109,6 @@ class Endpoint:
         self.auth_in_progress = False
         self.current_rfid = None
 
-
     def auth_timeout(self):
         """
         Przekroczono 10 sekund na wpisanie PIN-u
@@ -122,8 +123,6 @@ class Endpoint:
             self.auth_in_progress = False
             self.current_rfid = None
 
-
-
     def save_offline_event(self, czas, id_urzadzenia, dane_czujnikow):
         """
         Zapis odebranych dane z czujników bezpośrednio do lokalnej bazy danych SQLite w przypadku braku połączenia do siecu
@@ -132,5 +131,24 @@ class Endpoint:
         :param dane_czujnikow:
         :return: None
         """
-        self.db.execute("INSERT INTO events(czas, id_urzadzenia, dane_czujnikow) VALUES (?, ?, ?)", (czas, id_urzadzenia, dane_czujnikow))
+        self.db.execute("INSERT INTO events(czas, id_urzadzenia, dane_czujnikow) VALUES (?, ?, ?)",
+                        (czas, id_urzadzenia, dane_czujnikow))
         self.db.commit()
+
+    def sha256_hash(self, file):
+        sha256 = hashlib.sha256()
+        with open(file, "rb") as f:
+            data_chunk = f.read(4096)
+            while data_chunk:
+                sha256.update(data_chunk)
+                data_chunk = f.read(4096)
+        return sha256.hexdigest()
+
+    def send_video(self, file_path):
+        video_hash = self.sha256_hash(file_path)
+        self.client.publish("labs/lab_01/video_hash", json.dumps({"file_path": file_path, "hash": video_hash}))
+
+
+usage = Endpoint()
+usage.client.connect("localhost", 1883, 60)
+usage.client.loop_forever()
